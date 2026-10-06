@@ -1,9 +1,20 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-app = FastAPI(title="To-Do List API")
+from app.api import auth, tasks, categories
+from app.core.database import init_db
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(title="Todo API", lifespan=lifespan)
+
+app.include_router(auth.router, prefix="/auth")
+app.include_router(tasks.router)
+app.include_router(categories.router)
 
 @app.get("/")
-def read_root():
-    return {"message": "To-Do API is running"}
-
+async def root():
+    return {"message": "Todo API is running"}
